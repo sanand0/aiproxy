@@ -1,0 +1,15 @@
+{
+  "type": "module",
+  "scripts": {
+    "lint": "prettier --write '**/*.{js,md} && eslint",
+    "deploy": "wrangler deploy"
+  },
+  "prettier": {
+    "printWidth": 120
+  },
+  "devDependencies": {
+    "eslint": "^9.5.0",
+    "prettier": "^3.3.2",
+    "wrangler": "^3.61.0"
+  }
+}
