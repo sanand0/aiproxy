@@ -1,1 +1,6 @@
+# Don't commit generated files
 node_modules/
+.wrangler/
+
+# Don't commit secrets
+.dev.vars
