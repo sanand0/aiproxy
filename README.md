@@ -33,7 +33,10 @@ AI Proxy only supports these endpoints and models:
 - `POST https://aiproxy.sanand.workers.dev/v1/chat/completions`
   - `model: gpt-3.5-turbo`
 
-It returns a set of validation headers. #TODO
+It returns a set of additional headers:
+
+1. `dailyCost`: Total costs of requests used today. Daily limit is $1 (resets at midnight UTC).
+2. `dailyRequests`: Total requests made today.
 
 ## Setup
 

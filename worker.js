@@ -54,16 +54,20 @@ export default {
     const result = await response.json();
 
     result.dailyCost = plugins[plugin].cost(result) + (usage.document?.dailyCost ?? 0);
+    result.dailyRequests = 1 + (usage.document?.dailyRequests ?? 0);
     if (usage.document)
       await mongoRequest(
         "updateOne",
-        { filter: { user: payload.email, date: today }, update: { $set: { dailyCost: result.dailyCost } } },
+        {
+          filter: { user: payload.email, date: today },
+          update: { $set: { dailyCost: result.dailyCost, dailyRequests: result.dailyRequests } },
+        },
         env,
       );
     else
       await mongoRequest(
         "insertOne",
-        { document: { user: payload.email, date: today, dailyCost: result.dailyCost } },
+        { document: { user: payload.email, date: today, dailyCost: result.dailyCost, dailyRequests: 1 } },
         env,
       );
 
