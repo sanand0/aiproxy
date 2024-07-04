@@ -54,11 +54,18 @@ export default {
     const result = await response.json();
 
     result.dailyCost = plugins[plugin].cost(result) + (usage.document?.dailyCost ?? 0);
-    await mongoRequest(
-      "updateOne",
-      { filter: { user: payload.email, date: today }, update: { $set: { dailyCost: result.dailyCost } } },
-      env,
-    );
+    if (usage.document)
+      await mongoRequest(
+        "updateOne",
+        { filter: { user: payload.email, date: today }, update: { $set: { dailyCost: result.dailyCost } } },
+        env,
+      );
+    else
+      await mongoRequest(
+        "insertOne",
+        { document: { user: payload.email, date: today, dailyCost: result.dailyCost } },
+        env,
+      );
 
     return new Response(JSON.stringify(result, null, 2), {
       headers: skipHeaders(response.headers, skipResponseHeaders),
