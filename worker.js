@@ -29,13 +29,14 @@ export default {
     }
 
     // Check if user has quota left
-    const today = new Date().toISOString().split("T")[0];
-    const usage = await mongoRequest("findOne", { filter: { user: payload.email, date: today } }, env);
+    const today = new Date();
+    const month = today.toISOString().slice(0, 7);
+    const usage = await mongoRequest("findOne", { filter: { email: payload.email, month } }, env);
     if (usage.error) return jsonResponse({ code: 500, message: `MongoDB error: ${usage.error}` });
-    const dailyCost = usage?.document?.dailyCost;
-    const limit = 1.0;
-    if (dailyCost > limit)
-      return jsonResponse({ code: 429, message: `On ${today} you used $${dailyCost}, exceeding $${limit}` });
+    const monthlyCost = usage?.document?.monthlyCost;
+    const limit = 0.5;
+    if (monthlyCost > limit)
+      return jsonResponse({ code: 429, message: `On ${month} you used $${monthlyCost}, exceeding $${limit}` });
 
     let body;
     try {
@@ -53,21 +54,28 @@ export default {
     });
     const result = await response.json();
 
-    result.dailyCost = plugins[plugin].cost(result) + (usage.document?.dailyCost ?? 0);
-    result.dailyRequests = 1 + (usage.document?.dailyRequests ?? 0);
+    result.monthlyCost = (usage.document?.monthlyCost ?? 0);
+    try {
+      result.monthlyCost += plugins[plugin].cost(result);
+      result.monthlyRequests = 1 + (usage.document?.monthlyRequests ?? 0);
+    } catch (err) {
+      result.costError = err.message;
+    }
     if (usage.document)
       await mongoRequest(
         "updateOne",
         {
-          filter: { user: payload.email, date: today },
-          update: { $set: { dailyCost: result.dailyCost, dailyRequests: result.dailyRequests } },
+          filter: { email: payload.email, month },
+          update: {
+            $set: { monthlyCost: result.monthlyCost, monthlyRequests: result.monthlyRequests, lastUpdated: today },
+          },
         },
         env,
       );
     else
       await mongoRequest(
         "insertOne",
-        { document: { user: payload.email, date: today, dailyCost: result.dailyCost, dailyRequests: 1 } },
+        { document: { email: payload.email, month, monthlyCost: result.monthlyCost, monthlyRequests: 1, lastUpdated: today } },
         env,
       );
 
