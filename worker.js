@@ -54,9 +54,10 @@ export default {
     });
     const result = await response.json();
 
-    result.monthlyCost = (usage.document?.monthlyCost ?? 0);
+    result.monthlyCost = usage.document?.monthlyCost ?? 0;
     try {
-      result.monthlyCost += plugins[plugin].cost(result);
+      result.cost = +plugins[plugin].cost(result);
+      result.monthlyCost += result.cost;
       result.monthlyRequests = 1 + (usage.document?.monthlyRequests ?? 0);
     } catch (err) {
       result.costError = err.message;
@@ -75,7 +76,15 @@ export default {
     else
       await mongoRequest(
         "insertOne",
-        { document: { email: payload.email, month, monthlyCost: result.monthlyCost, monthlyRequests: 1, lastUpdated: today } },
+        {
+          document: {
+            email: payload.email,
+            month,
+            monthlyCost: result.monthlyCost,
+            monthlyRequests: 1,
+            lastUpdated: today,
+          },
+        },
         env,
       );
 
@@ -126,7 +135,7 @@ const plugins = {
     cost: function (result) {
       return result.model == "text-embedding-3-small"
         ? (0.02 / 1e6) * result.usage?.prompt_tokens
-        : result.model.match(/gpt-3.5-turbo/)
+        : result.model?.match(/gpt-3.5-turbo/)
           ? (3 / 1e6) * result.usage?.prompt_tokens + (6 / 1e6) * result.usage?.completion_tokens
           : 0;
     },

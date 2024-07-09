@@ -35,8 +35,9 @@ AI Proxy only supports these endpoints and models:
 
 It returns a set of additional headers:
 
-1. `dailyCost`: Total costs of requests used today. Daily limit is $1 (resets at midnight UTC).
-2. `dailyRequests`: Total requests made today.
+1. `cost`: Cost of this request in USD
+2. `monthlyCost`: Total costs (in USD) of requests used this month. Monthly limit is $0.5 (resets at midnight UTC on the first of the next month).
+3. `monthlyRequests`: Total requests made this month.
 
 ## Setup
 
