@@ -27,10 +27,10 @@ curl -X POST http://aiproxy.sanand.workers.dev/openai/v1/embeddings \
 
 AI Proxy only supports these endpoints and models:
 
-- `GET https://aiproxy.sanand.workers.dev/v1/models`
-- `POST https://aiproxy.sanand.workers.dev/v1/embeddings`
+- `GET https://aiproxy.sanand.workers.dev/openai/v1/models`
+- `POST https://aiproxy.sanand.workers.dev/openai/v1/embeddings`
   - `model: text-embedding-3-small`
-- `POST https://aiproxy.sanand.workers.dev/v1/chat/completions`
+- `POST https://aiproxy.sanand.workers.dev/openai/v1/chat/completions`
   - `model: gpt-3.5-turbo`
 
 It returns a set of additional headers:
