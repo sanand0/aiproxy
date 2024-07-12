@@ -39,7 +39,7 @@ It returns a set of additional headers:
 2. `monthlyCost`: Total costs (in USD) of requests used this month. Monthly limit is $0.5 (resets at midnight UTC on the first of the next month).
 3. `monthlyRequests`: Total requests made this month.
 
-## Setup
+## How to set up this app (for admins, not users)
 
 MongoDB setup
 
