@@ -7,6 +7,11 @@ export default {
     const url = new URL(request.url);
     const plugin = url.pathname.split("/")[1];
 
+    if (plugin == "usage") {
+      const data = await mongoRequest("find", { filter: {} }, env);
+      return new Response(JSON.stringify(data.documents, null, 2), { headers: { "content-type": "application/json" } });
+    }
+
     // Let the user know if there's no plugin or an unknown plugin
     if (!plugin) return jsonResponse({ code: 200, message: "See docs at https://github.com/sanand0/aiproxy" });
     if (!plugins[plugin]) return jsonResponse({ code: 404, message: `Unknown plugin: ${plugin}` });
