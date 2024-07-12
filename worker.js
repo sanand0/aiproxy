@@ -7,23 +7,26 @@ export default {
     const url = new URL(request.url);
     const plugin = url.pathname.split("/")[1];
 
+    // /usage shows the cost and # of requests made by each user
     if (plugin == "usage") {
       const data = await mongoRequest("find", { filter: {} }, env);
       return new Response(JSON.stringify(data.documents, null, 2), { headers: { "content-type": "application/json" } });
     }
 
-    // Let the user know if there's no plugin or an unknown plugin
+    // Check if the URL matches a valid plugin. Else let the user know if there's no plugin or an unknown plugin
     if (!plugin) return jsonResponse({ code: 200, message: "See docs at https://github.com/sanand0/aiproxy" });
     if (!plugins[plugin]) return jsonResponse({ code: 404, message: `Unknown plugin: ${plugin}` });
 
     // Get the Authorization: Bearer token, stripping the "Bearer " and whitespace
     const token = (request.headers.get("Authorization") ?? "").replace(/^Bearer\s+/, "").trim();
     let payload;
+    // Report an error if the token is missing
     if (!token)
       return jsonResponse({
         code: 401,
         message: "Missing Authorization: Bearer header. See https://github.com/sanand0/aiproxy",
       });
+    // Verify the token using the secret. If it's invalid, report an error
     const secret = new TextEncoder().encode(env.AIPROXY_TOKEN_SECRET);
     try {
       payload = (await jose.jwtVerify(token, secret)).payload;
@@ -33,7 +36,7 @@ export default {
       return jsonResponse({ code: 401, message: `Bearer ${token} is invalid: ${err}` });
     }
 
-    // Check if user has quota left
+    // Check if user's cost usage is below the limit. If not, return HTTP 429
     const today = new Date();
     const month = today.toISOString().slice(0, 7);
     const usage = await mongoRequest("findOne", { filter: { email: payload.email, month } }, env);
@@ -43,6 +46,7 @@ export default {
     if (monthlyCost > limit)
       return jsonResponse({ code: 429, message: `On ${month} you used $${monthlyCost}, exceeding $${limit}` });
 
+    // Validate the request body (e.g. valid model, valid path, etc.) and return the body. If invalid, return an error
     let body;
     try {
       body = await plugins[plugin].validate(request);
@@ -50,8 +54,10 @@ export default {
       return jsonResponse({ code: err.code, message: err.message });
     }
 
+    // Get the request parameters (method, target URL, headers) from the plugin
     const { method, url: targetUrl, headers } = await plugins[plugin].request({ url, request, env });
 
+    // Make the request to the target URL and get the response
     const response = await fetch(targetUrl, {
       method,
       headers: skipHeaders(headers, skipRequestHeaders),
@@ -59,6 +65,7 @@ export default {
     });
     const result = await response.json();
 
+    // Calculate the cost of the request and update the usage in MongoDB
     result.monthlyCost = usage.document?.monthlyCost ?? 0;
     try {
       result.cost = +plugins[plugin].cost(result);
@@ -93,6 +100,7 @@ export default {
         env,
       );
 
+    // Return the response from the target URL to the user
     return new Response(JSON.stringify(result, null, 2), {
       headers: skipHeaders(response.headers, skipResponseHeaders),
       status: response.status,
