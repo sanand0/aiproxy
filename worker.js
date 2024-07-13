@@ -2,6 +2,12 @@ import * as jose from "jose";
 
 export default {
   async fetch(request, env) {
+    // If the request is a preflight request, return early
+    if (request.method == "OPTIONS")
+      return new Response(null, {
+        headers: addCors(new Headers({ "Access-Control-Max-Age": "86400" })),
+      });
+
     // We use plugins to handle different LLMs.
     // The plugin is the first part of the path between /.../ -- e.g. /openai/
     const url = new URL(request.url);
@@ -18,7 +24,7 @@ export default {
     if (!plugins[plugin]) return jsonResponse({ code: 404, message: `Unknown plugin: ${plugin}` });
 
     // Get the Authorization: Bearer token, stripping the "Bearer " and whitespace
-    const token = (request.headers.get("Authorization") ?? "").replace(/^Bearer\s+/, "").trim();
+    const token = (request.headers.get("Authorization") ?? "").replace(/^Bearer\s*/, "").trim();
     let payload;
     // Report an error if the token is missing
     if (!token)
@@ -102,7 +108,7 @@ export default {
 
     // Return the response from the target URL to the user
     return new Response(JSON.stringify(result, null, 2), {
-      headers: skipHeaders(response.headers, skipResponseHeaders),
+      headers: addCors(skipHeaders(response.headers, skipResponseHeaders)),
       status: response.status,
       statusText: response.statusText,
     });
@@ -164,6 +170,13 @@ function skipHeaders(headers, skipList) {
   return result;
 }
 
+function addCors(headers) {
+  headers.set("Access-Control-Allow-Origin", "*");
+  headers.set("Access-Control-Allow-Methods", "GET, POST");
+  headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  return headers;
+}
+
 async function mongoRequest(action, params, { MONGODB_API_KEY, MONGODB_APP_ID }) {
   return await fetch(`https://data.mongodb-api.com/app/${MONGODB_APP_ID}/endpoint/data/v1/action/${action}`, {
     method: "POST",
@@ -179,7 +192,7 @@ async function mongoRequest(action, params, { MONGODB_API_KEY, MONGODB_APP_ID })
 function jsonResponse({ code, ...rest }) {
   return new Response(JSON.stringify(rest, null, 2), {
     status: code,
-    headers: { "content-type": "application/json" },
+    headers: addCors(new Headers({ "content-type": "application/json" })),
   });
 }
 
