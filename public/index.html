@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Proxy</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div class="container mt-4">
+    <h1>AI Proxy</h1>
+    <p>Log in with your IITM email ID to get your API token.</p>
+
+    <div id="login"></div>
+
+    <p class="mt-3">See <a href="https://github.com/sanand0/aiproxy">github.com/sanand0/aiproxy</a> for usage.</p>
+
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      const $login = document.getElementById("login");
+
+      google.accounts.id.initialize({
+        client_id: "233761863432-t8g2u6esaeli8o2e2crvnu29u94ukt7k.apps.googleusercontent.com",
+        callback: async (response) => {
+          try {
+            const data = await fetch(`/token?credential=${response.credential}`).then(r => r.json());
+            if (data.error) {
+              $login.innerHTML = `<div class="alert alert-danger" role="alert">${data.error}</div>`;
+            } else {
+              $login.innerHTML = `
+                <div class="mb-3">
+                  <label for="tokenInput" class="form-label">Your API Token:</label>
+                  <input type="text" id="tokenInput" class="form-control" value="${data.token}" readonly>
+                </div>`;
+            }
+          } catch (error) {
+            $login.innerHTML = `<div class="alert alert-danger" role="alert">Error fetching token: ${error.message}</div>`;
+          }
+        },
+      });
+
+      // Render the Google Sign-In button
+      google.accounts.id.renderButton($login, {
+        theme: "filled_black",
+        size: "large",
+        shape: "pill",
+        logo_alignment: "left",
+      });
+    </script>
+</body>
+
+</html>

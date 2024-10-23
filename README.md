@@ -4,7 +4,7 @@ This is an authorizing proxy for LLMs.
 
 ## Usage
 
-Get an API token from the IITM Data Science support team.
+Log in at <https://aiproxy.sanand.workers.dev/> with your IITM email ID to get your AIPROXY_TOKEN.
 
 Then, instead of sending an API request to `https://api.openai.com/`:
 
@@ -17,7 +17,7 @@ For example:
 curl -X POST http://aiproxy.sanand.workers.dev/openai/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $AIPROXY_TOKEN" \
-  -d '{"model": "gpt-3.5-turbo", "messages": [{"role": "user", "content": "What is 2 + 2"}]}'
+  -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "What is 2 + 2"}]}'
 
 curl -X POST http://aiproxy.sanand.workers.dev/openai/v1/embeddings \
   -H "Content-Type: application/json" \
@@ -31,7 +31,7 @@ AI Proxy only supports these endpoints and models:
 - `POST https://aiproxy.sanand.workers.dev/openai/v1/embeddings`
   - `model: text-embedding-3-small`
 - `POST https://aiproxy.sanand.workers.dev/openai/v1/chat/completions`
-  - `model: gpt-3.5-turbo`
+  - `model: gpt-4o-mini`
 
 It returns a set of additional headers:
 

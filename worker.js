@@ -1,17 +1,46 @@
+import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
+import manifestJSON from "__STATIC_CONTENT_MANIFEST";
 import * as jose from "jose";
 
+const assetManifest = JSON.parse(manifestJSON);
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     // If the request is a preflight request, return early
     if (request.method == "OPTIONS")
       return new Response(null, {
         headers: addCors(new Headers({ "Access-Control-Max-Age": "86400" })),
       });
 
+    // Try to serve static assets first
+    try {
+      return await getAssetFromKV(
+        { request, waitUntil: ctx.waitUntil.bind(ctx) },
+        { ASSET_NAMESPACE: env.__STATIC_CONTENT, ASSET_MANIFEST: assetManifest },
+      );
+    } catch {
+      // If not a static asset, continue with existing logic
+    }
+
     // We use plugins to handle different LLMs.
     // The plugin is the first part of the path between /.../ -- e.g. /openai/
     const url = new URL(request.url);
     const plugin = url.pathname.split("/")[1];
+
+    // New endpoint for /token
+    if (plugin === "token") {
+      const credential = url.searchParams.get("credential");
+      if (!credential) return jsonResponse({ error: "Missing credential" });
+      try {
+        const { email } = JSON.parse(atob(credential.split('.')[1]));
+        if (!email.endsWith(".iitm.ac.in")) return jsonResponse({ error: "Only .iitm.ac.in emails are allowed." });
+        const secret = new TextEncoder().encode(env.AIPROXY_TOKEN_SECRET);
+        const token = await new jose.SignJWT({ email }).setProtectedHeader({ alg: "HS256" }).sign(secret);
+        return jsonResponse({ token, email });
+      } catch (error) {
+        return jsonResponse({ error: "Invalid credential" });
+      }
+    }
 
     // /usage shows the cost and # of requests made by each user
     if (plugin == "usage") {
@@ -144,7 +173,7 @@ const plugins = {
         throw new CustomError({ code: 400, message: `Invalid JSON body: ${err}` });
       }
       // Ensure that the model is valid
-      if (body && body.model && !["text-embedding-3-small", "gpt-3.5-turbo"].includes(body.model))
+      if (body && body.model && !["text-embedding-3-small", "gpt-4o-mini"].includes(body.model))
         throw new CustomError({ code: 400, message: `Invalid model: ${body.model}` });
       // Allow only requests to /chat/completions, /embeddings, /models
       if (
@@ -160,7 +189,7 @@ const plugins = {
     cost: function (result) {
       return result.model == "text-embedding-3-small"
         ? (0.02 / 1e6) * result.usage?.prompt_tokens
-        : result.model?.match(/gpt-3.5-turbo/)
+        : result.model?.match(/gpt-4o-mini/)
           ? (3 / 1e6) * result.usage?.prompt_tokens + (6 / 1e6) * result.usage?.completion_tokens
           : 0;
     },
