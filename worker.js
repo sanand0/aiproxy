@@ -32,12 +32,12 @@ export default {
       const credential = url.searchParams.get("credential");
       if (!credential) return jsonResponse({ error: "Missing credential" });
       try {
-        const { email } = JSON.parse(atob(credential.split('.')[1]));
+        const { email } = JSON.parse(atob(credential.split(".")[1]));
         if (!email.endsWith(".iitm.ac.in")) return jsonResponse({ error: "Only .iitm.ac.in emails are allowed." });
         const secret = new TextEncoder().encode(env.AIPROXY_TOKEN_SECRET);
         const token = await new jose.SignJWT({ email }).setProtectedHeader({ alg: "HS256" }).sign(secret);
         return jsonResponse({ token, email });
-      } catch (error) {
+      } catch {
         return jsonResponse({ error: "Invalid credential" });
       }
     }
@@ -245,21 +245,15 @@ const openaiModels = {
   object: "list",
   data: [
     {
-      id: "gpt-3.5-turbo-0613",
+      id: "tts-1",
       object: "model",
-      created: 1686587434,
-      owned_by: "openai",
-    },
-    {
-      id: "whisper-1",
-      object: "model",
-      created: 1677532384,
+      created: 1681940951,
       owned_by: "openai-internal",
     },
     {
-      id: "gpt-4o",
+      id: "tts-1-1106",
       object: "model",
-      created: 1715367049,
+      created: 1699053241,
       owned_by: "system",
     },
     {
@@ -269,57 +263,21 @@ const openaiModels = {
       owned_by: "system",
     },
     {
-      id: "gpt-3.5-turbo-16k",
+      id: "whisper-1",
       object: "model",
-      created: 1683758102,
+      created: 1677532384,
       owned_by: "openai-internal",
     },
     {
-      id: "tts-1-hd-1106",
+      id: "gpt-3.5-turbo-instruct",
       object: "model",
-      created: 1699053533,
+      created: 1692901427,
       owned_by: "system",
     },
     {
-      id: "gpt-4o-2024-05-13",
+      id: "gpt-4o-mini",
       object: "model",
-      created: 1715368132,
-      owned_by: "system",
-    },
-    {
-      id: "tts-1-hd",
-      object: "model",
-      created: 1699046015,
-      owned_by: "system",
-    },
-    {
-      id: "gpt-4-turbo-2024-04-09",
-      object: "model",
-      created: 1712601677,
-      owned_by: "system",
-    },
-    {
-      id: "gpt-4-0125-preview",
-      object: "model",
-      created: 1706037612,
-      owned_by: "system",
-    },
-    {
-      id: "gpt-4-turbo-preview",
-      object: "model",
-      created: 1706037777,
-      owned_by: "system",
-    },
-    {
-      id: "gpt-4-turbo",
-      object: "model",
-      created: 1712361441,
-      owned_by: "system",
-    },
-    {
-      id: "gpt-3.5-turbo-instruct-0914",
-      object: "model",
-      created: 1694122472,
+      created: 1721172741,
       owned_by: "system",
     },
     {
@@ -329,33 +287,9 @@ const openaiModels = {
       owned_by: "openai",
     },
     {
-      id: "gpt-3.5-turbo-instruct",
+      id: "gpt-3.5-turbo-0125",
       object: "model",
-      created: 1692901427,
-      owned_by: "system",
-    },
-    {
-      id: "text-embedding-3-small",
-      object: "model",
-      created: 1705948997,
-      owned_by: "system",
-    },
-    {
-      id: "tts-1",
-      object: "model",
-      created: 1681940951,
-      owned_by: "openai-internal",
-    },
-    {
-      id: "text-embedding-3-large",
-      object: "model",
-      created: 1705953180,
-      owned_by: "system",
-    },
-    {
-      id: "gpt-4-1106-preview",
-      object: "model",
-      created: 1698957206,
+      created: 1706048358,
       owned_by: "system",
     },
     {
@@ -365,34 +299,10 @@ const openaiModels = {
       owned_by: "system",
     },
     {
-      id: "gpt-3.5-turbo-0125",
+      id: "davinci-002",
       object: "model",
-      created: 1706048358,
+      created: 1692634301,
       owned_by: "system",
-    },
-    {
-      id: "gpt-4-0613",
-      object: "model",
-      created: 1686588896,
-      owned_by: "openai",
-    },
-    {
-      id: "tts-1-1106",
-      object: "model",
-      created: 1699053241,
-      owned_by: "system",
-    },
-    {
-      id: "gpt-4",
-      object: "model",
-      created: 1687882411,
-      owned_by: "openai",
-    },
-    {
-      id: "gpt-4-0314",
-      object: "model",
-      created: 1687882410,
-      owned_by: "openai",
     },
     {
       id: "dall-e-3",
@@ -407,27 +317,39 @@ const openaiModels = {
       owned_by: "openai-internal",
     },
     {
-      id: "gpt-4-32k-0314",
+      id: "gpt-3.5-turbo-16k",
       object: "model",
-      created: 1687979321,
-      owned_by: "openai",
+      created: 1683758102,
+      owned_by: "openai-internal",
     },
     {
-      id: "davinci-002",
+      id: "gpt-4o-mini-2024-07-18",
       object: "model",
-      created: 1692634301,
+      created: 1721172717,
       owned_by: "system",
     },
     {
-      id: "gpt-4-vision-preview",
+      id: "text-embedding-3-small",
       object: "model",
-      created: 1698894917,
+      created: 1705948997,
       owned_by: "system",
     },
     {
-      id: "gpt-4-1106-vision-preview",
+      id: "text-embedding-3-large",
       object: "model",
-      created: 1711473033,
+      created: 1705953180,
+      owned_by: "system",
+    },
+    {
+      id: "tts-1-hd",
+      object: "model",
+      created: 1699046015,
+      owned_by: "system",
+    },
+    {
+      id: "tts-1-hd-1106",
+      object: "model",
+      created: 1699053533,
       owned_by: "system",
     },
     {
@@ -437,16 +359,10 @@ const openaiModels = {
       owned_by: "system",
     },
     {
-      id: "gpt-3.5-turbo-16k-0613",
+      id: "gpt-3.5-turbo-instruct-0914",
       object: "model",
-      created: 1685474247,
-      owned_by: "openai",
-    },
-    {
-      id: "gpt-3.5-turbo-0301",
-      object: "model",
-      created: 1677649963,
-      owned_by: "openai",
+      created: 1694122472,
+      owned_by: "system",
     },
   ],
 };
