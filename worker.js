@@ -44,7 +44,18 @@ export default {
 
     // /usage shows the cost and # of requests made by each user
     if (plugin == "usage") {
-      const data = await mongoRequest("find", { filter: {} }, env);
+      const params = Object.fromEntries(url.searchParams);
+      const data = await mongoRequest("find", {
+        skip: +(params.skip || 0),
+        limit: +(params.limit || 1000),
+        filter: {
+          ...(params.month && { month: params.month }),
+          ...(params.email && { email: params.email }),
+        },
+        sort: {
+          ...(params.sort && { [params.sort]: -1 }),
+        }
+      }, env);
       return new Response(JSON.stringify(data.documents, null, 2), { headers: { "content-type": "application/json" } });
     }
 
@@ -77,7 +88,7 @@ export default {
     const usage = await mongoRequest("findOne", { filter: { email: payload.email, month } }, env);
     if (usage.error) return jsonResponse({ code: 500, message: `MongoDB error: ${usage.error}` });
     const monthlyCost = usage?.document?.monthlyCost;
-    const limit = 0.5;
+    const limit = 2.0;
     if (monthlyCost > limit)
       return jsonResponse({ code: 429, message: `On ${month} you used $${monthlyCost}, exceeding $${limit}` });
 
