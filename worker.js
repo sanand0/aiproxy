@@ -45,17 +45,21 @@ export default {
     // /usage shows the cost and # of requests made by each user
     if (plugin == "usage") {
       const params = Object.fromEntries(url.searchParams);
-      const data = await mongoRequest("find", {
-        skip: +(params.skip || 0),
-        limit: +(params.limit || 1000),
-        filter: {
-          ...(params.month && { month: params.month }),
-          ...(params.email && { email: params.email }),
+      const data = await mongoRequest(
+        "find",
+        {
+          skip: +(params.skip || 0),
+          limit: +(params.limit || 1000),
+          filter: {
+            ...(params.month && { month: params.month }),
+            ...(params.email && { email: params.email }),
+          },
+          sort: {
+            ...(params.sort && { [params.sort]: -1 }),
+          },
         },
-        sort: {
-          ...(params.sort && { [params.sort]: -1 }),
-        }
-      }, env);
+        env,
+      );
       return new Response(JSON.stringify(data.documents, null, 2), { headers: { "content-type": "application/json" } });
     }
 
@@ -123,6 +127,7 @@ export default {
       result.cost = +plugins[plugin].cost(result);
       result.monthlyCost += result.cost;
       result.monthlyRequests = 1 + (usage.document?.monthlyRequests ?? 0);
+      result.hash = crypto.createHash("sha256").update(JSON.stringify(result)).digest("hex");
     } catch (err) {
       result.costError = err.message;
     }
@@ -163,6 +168,7 @@ export default {
 
 const plugins = {
   openai: {
+    /* Convert the request to the OpenAI API */
     request: async function ({ url, request, env: { OPENAI_API_KEY } }) {
       // Strip the plugin part of the URL to get the target URL
       const targetPath = url.pathname.replace(/^\/openai\//, "/");
@@ -174,6 +180,7 @@ const plugins = {
         headers,
       };
     },
+    /* Validate the request body */
     validate: async function (request) {
       const url = new URL(request.url);
       // Ensure that the body is valid JSON
@@ -197,6 +204,7 @@ const plugins = {
       if (body && body.stream) throw new CustomError({ code: 400, message: `Streaming is not supported` });
       return body;
     },
+    /* Calculate the cost of the request */
     cost: function (result) {
       return result.model == "text-embedding-3-small"
         ? (0.02 / 1e6) * result.usage?.prompt_tokens
