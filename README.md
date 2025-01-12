@@ -68,3 +68,68 @@ To create an API token for an `emailId`, run:
 secret = new TextEncoder().encode(AIPROXY_TOKEN_SECRET);
 token = await new jose.SignJWT({ email: emailId }).setProtectedHeader({ alg: "HS256" }).sign(secret);
 ```
+
+## API Reference
+
+### GET /token
+
+Creates an authentication token for IITM users.
+
+Query Parameters:
+
+- `credential`: Google OAuth credential token
+
+Returns:
+
+- `{token, email}` on success
+- `{error}` on failure
+
+### GET /usage
+
+Returns usage statistics for users.
+
+Query Parameters:
+
+- `skip`: Number of records to skip (default: 0)
+- `limit`: Maximum records to return (default: 1000)
+- `month`: Filter by month (YYYY-MM format)
+- `email`: Filter by user email
+- `sort`: Field to sort by (descending order)
+
+### GET /openai/v1/models
+
+Returns list of available models.
+
+### POST /openai/v1/chat/completions
+
+Proxies chat completion requests.
+
+Request Body:
+
+- `model`: Only supports "gpt-4o-mini"
+- `messages`: Array of chat messages
+- `stream`: Not supported
+
+### POST /openai/v1/embeddings
+
+Proxies embedding requests.
+
+Request Body:
+
+- `model`: Only supports "text-embedding-3-small"
+- `input`: Text to embed
+
+## Response Headers
+
+All API responses include:
+
+- `cost`: Cost of current request in USD
+- `monthlyCost`: Total costs for current month
+- `monthlyRequests`: Total requests for current month
+
+## Rate Limits
+
+- Monthly cost limit: $0.5 per user
+- Costs per request:
+  - Embeddings: $0.02 per million tokens
+  - Chat completions: $0.003 per 1K prompt tokens, $0.006 per 1K completion tokens
