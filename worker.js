@@ -2,6 +2,14 @@ import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
 import manifestJSON from "__STATIC_CONTENT_MANIFEST";
 import * as jose from "jose";
 
+const domains = [
+  "ds.study.iitm.ac.in",
+  "study.iitm.ac.in",
+  "straive.com",
+  "gramener.com",
+  "learningmate.com",
+  "wearedoubleline.com",
+];
 const assetManifest = JSON.parse(manifestJSON);
 
 export default {
@@ -33,7 +41,8 @@ export default {
       if (!credential) return jsonResponse({ error: "Missing credential" });
       try {
         const { email } = JSON.parse(atob(credential.split(".")[1]));
-        if (!email.endsWith(".iitm.ac.in")) return jsonResponse({ error: "Only .iitm.ac.in emails are allowed." });
+        if (!domains.includes(email.split("@")[1].toLowerCase()))
+          return jsonResponse({ error: "Only authorized emails are allowed." });
         const secret = new TextEncoder().encode(env.AIPROXY_TOKEN_SECRET);
         const token = await new jose.SignJWT({ email }).setProtectedHeader({ alg: "HS256" }).sign(secret);
         return jsonResponse({ token, email });
