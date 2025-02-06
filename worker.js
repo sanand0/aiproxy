@@ -136,7 +136,6 @@ export default {
       result.cost = +plugins[plugin].cost(result);
       result.monthlyCost += result.cost;
       result.monthlyRequests = 1 + (usage.document?.monthlyRequests ?? 0);
-      result.hash = crypto.createHash("sha256").update(JSON.stringify(result)).digest("hex");
     } catch (err) {
       result.costError = err.message;
     }
