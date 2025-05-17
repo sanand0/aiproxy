@@ -57,8 +57,11 @@
         $login.innerHTML = `
           <div class="mb-3">
             <label for="tokenInput" class="form-label">Your API Token:</label>
-            <input type="text" id="tokenInput" class="form-control" value="${token}" readonly style="cursor:pointer;">
-            <button id="logoutBtn" class="btn btn-outline-secondary">Log out</button>
+            <div class="input-group">
+              <input type="text" id="tokenInput" class="form-control" value="${token}" readonly style="cursor:pointer;">
+              <button id="logoutBtn" class="btn btn-outline-secondary">Log out</button>
+            </div>
+            <div id="copyMsg" class="form-text" style="display:none;">Copied!</div>
           </div>`;
 
 
