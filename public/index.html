@@ -57,8 +57,26 @@
         $login.innerHTML = `
           <div class="mb-3">
             <label for="tokenInput" class="form-label">Your API Token:</label>
-            <input type="text" id="tokenInput" class="form-control" value="${token}" readonly>
+            <input type="text" id="tokenInput" class="form-control" value="${token}" readonly style="cursor:pointer;">
+            <button id="logoutBtn" class="btn btn-outline-secondary">Log out</button>
           </div>`;
+
+
+        // Logout button functionality
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          localStorage.removeItem("aiproxy_token");
+          localStorage.removeItem("aiproxy_email");
+          location.reload();
+        });
+
+        // Copy token to clipboard functionality
+        document.getElementById("tokenInput").addEventListener("click", async () => {
+          const input = document.getElementById("tokenInput");
+          await navigator.clipboard.writeText(input.value);
+          const msg = document.getElementById("copyMsg");
+          msg.style.display = "inline";
+          setTimeout(() => { msg.style.display = "none"; }, 1200);
+        });
 
         // Get current month as YYYY-MM
         const currentMonth = new Date().toISOString().slice(0, 7);
