@@ -29,41 +29,80 @@
     <script type="module">
       const $login = document.getElementById("login");
       const $usage = document.getElementById("usage");
-      google.accounts.id.initialize({
-        client_id: "233761863432-t8g2u6esaeli8o2e2crvnu29u94ukt7k.apps.googleusercontent.com",
-        callback: async (response) => {
-          try {
-            const data = await fetch(`/token?credential=${response.credential}`).then(r => r.json());
-            if (data.error) {
-              $login.innerHTML = `<div class="alert alert-danger" role="alert">${data.error}</div>`;
-            } else {
-              $login.innerHTML = `
-                <div class="mb-3">
-                  <label for="tokenInput" class="form-label">Your API Token:</label>
-                  <input type="text" id="tokenInput" class="form-control" value="${data.token}" readonly>
-                </div>`;
-            }
-            // Get current month as YYYY-MM
-            const currentMonth = new Date().toISOString().slice(0, 7);
-            const usage = await fetch(`/usage?email=${data.email}&month=${currentMonth}`).then(r => r.json());
-            const { month, monthlyCost, monthlyRequests } = usage?.[0] ?? { month: currentMonth, monthlyCost: 0, monthlyRequests: 0 };
-            $usage.innerHTML = `
-              <div class="mb-3">
-                <p>You have used ${monthlyRequests} requests this month (${month}), costing ${monthlyCost.toFixed(2)} USD.</p>
-              </div>`;
-          } catch (error) {
-            $login.innerHTML = `<div class="alert alert-danger" role="alert">Error fetching token: ${error.message}</div>`;
-          }
-        },
-      });
+      function initGoogle() {
+        google.accounts.id.initialize({
+          client_id: "233761863432-t8g2u6esaeli8o2e2crvnu29u94ukt7k.apps.googleusercontent.com",
+          callback: async (response) => {
+            try {
+              const data = await fetch(`/token?credential=${response.credential}`).then(r => r.json());
+              if (data.error) {
+                $login.innerHTML = `<div class="alert alert-danger" role="alert">${data.error}</div>`;
+              }
 
-      // Render the Google Sign-In button
-      google.accounts.id.renderButton($login, {
-        theme: "filled_black",
-        size: "large",
-        shape: "pill",
-        logo_alignment: "left",
-      });
+              localStorage.setItem("aiproxy_token", data.token);
+              localStorage.setItem("aiproxy_email", data.email);
+              renderSignedIn(data.token, data.email);
+            } catch (error) {
+              $login.innerHTML = `<div class="alert alert-danger" role="alert">Error fetching token: ${error.message}</div>`;
+            }
+          },
+        });
+
+        // Render the Google Sign-In button
+        google.accounts.id.renderButton($login, {
+          theme: "filled_black",
+          size: "large",
+          shape: "pill",
+          logo_alignment: "left",
+        });
+      }
+
+      // Render the UI for a signed-in user
+      async function renderSignedIn(token, email) {
+        $login.innerHTML = `
+          <div class="mb-3">
+            <label for="tokenInput" class="form-label">Your API Token:</label>
+            <div class="input-group">
+              <input type="text" id="tokenInput" class="form-control" value="${token}" readonly style="cursor:pointer;">
+              <button id="logoutBtn" class="btn btn-outline-secondary">Log out</button>
+            </div>
+            <div id="copyMsg" class="form-text" style="display:none;">Copied!</div>
+          </div>`;
+
+
+        // Logout button functionality
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          localStorage.removeItem("aiproxy_token");
+          localStorage.removeItem("aiproxy_email");
+          location.reload();
+        });
+
+        // Copy token to clipboard functionality
+        document.getElementById("tokenInput").addEventListener("click", async () => {
+          const input = document.getElementById("tokenInput");
+          await navigator.clipboard.writeText(input.value);
+          const msg = document.getElementById("copyMsg");
+          msg.style.display = "inline";
+          setTimeout(() => { msg.style.display = "none"; }, 1200);
+        });
+
+        // Get current month as YYYY-MM
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const usage = await fetch(`/usage?email=${encodeURIComponent(email)}&month=${currentMonth}`).then(r => r.json());
+        const { month, monthlyCost, monthlyRequests } = usage?.[0] ?? { month: currentMonth, monthlyCost: 0, monthlyRequests: 0 };
+        $usage.innerHTML = `
+          <div class="mb-3">
+            <p>You have used ${monthlyRequests} requests this month (${month}), costing ${monthlyCost.toFixed(2)} USD.</p>
+          </div>`;
+      }
+
+      const storedToken = localStorage.getItem("aiproxy_token");
+      const storedEmail = localStorage.getItem("aiproxy_email");
+      if (storedToken && storedEmail) {
+        renderSignedIn(storedToken, storedEmail);
+      } else {
+        initGoogle();
+      }
     </script>
 </body>
 
