@@ -1,5 +1,8 @@
 # AI Proxy
 
+> [!WARNING]
+> AI Proxy has been shut down in favor of [AI Pipe](https://aipipe.org/)
+
 This is an authorizing proxy for LLMs.
 
 ## Usage

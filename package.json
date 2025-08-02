@@ -3,15 +3,13 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "lint": "prettier --write '**/*.{js,md} && eslint"
+    "lint": "npx -y prettier@3.5 --print-width 120 '**/*.{js,md}' --write && npx -y oxlint --fix"
   },
   "prettier": {
     "printWidth": 120
   },
   "devDependencies": {
-    "eslint": "^9.5.0",
-    "prettier": "^3.3.2",
-    "wrangler": "^3.61.0"
+    "wrangler": "^4.27.0"
   },
   "dependencies": {
     "jose": "^5.4.1"
