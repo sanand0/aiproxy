@@ -101,7 +101,7 @@ export default {
     const usage = await mongoRequest("findOne", { filter: { email: payload.email, month } }, env);
     if (usage.error) return jsonResponse({ code: 500, message: `MongoDB error: ${usage.error}` });
     const monthlyCost = usage?.document?.monthlyCost;
-    const limit = 2.0;
+    const limit = 10.0;
     if (monthlyCost > limit)
       return jsonResponse({ code: 429, message: `On ${month} you used $${monthlyCost}, exceeding $${limit}` });
 
